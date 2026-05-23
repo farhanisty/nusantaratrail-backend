@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  superadmin
+  admin
+  tourist
+}
+
+enum Category {
+  candi
+  museum
+  keraton
+  makam
+  situs
+  lainnya
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  password  String   @db.VarChar(255)
+  role      Role     @default(tourist)
+  phone     String?  @db.VarChar(20)
+  avatarUrl String?  @db.VarChar(255) @map("avatar_url")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  locations Location[]
+  reviews   Review[]
+  visitLogs VisitLog[]
+  qrCodes   QRCode[]
+
+  @@map("users")
+}
+
+model Location {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(150)
+  slug        String   @unique @db.VarChar(150)
+  description String?  @db.Text
+  address     String?  @db.Text
+  latitude    Decimal  @db.Decimal(10, 8)
+  longitude   Decimal  @db.Decimal(11, 8)
+  category    Category
+  coverImage  String?  @db.VarChar(255) @map("cover_image")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy Int  @map("created_by")
+  user      User @relation(fields: [createdBy], references: [id])
+
+  qrCodes   QRCode[]
+  reviews   Review[]
+  visitLogs VisitLog[]
+
+  @@map("locations")
+}
+
+model QRCode {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique @db.VarChar(100)
+  qrImageUrl String?  @db.VarChar(255) @map("qr_image_url")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  locationId  Int      @map("location_id")
+  location    Location @relation(fields: [locationId], references: [id])
+  generatedBy Int      @map("generated_by")
+  user        User     @relation(fields: [generatedBy], references: [id])
+
+  visitLogs VisitLog[]
+
+  @@map("qr_codes")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      @db.TinyInt
+  comment   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  locationId Int      @map("location_id")
+  location   Location @relation(fields: [locationId], references: [id])
+  userId     Int      @map("user_id")
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+model VisitLog {
+  id         Int      @id @default(autoincrement())
+  scannedAt  DateTime @default(now()) @map("scanned_at")
+  deviceInfo String?  @db.VarChar(255) @map("device_info")
+  ipAddress  String?  @db.VarChar(50) @map("ip_address")
+
+  locationId Int      @map("location_id")
+  location   Location @relation(fields: [locationId], references: [id])
+  userId     Int?     @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  qrCodeId   Int      @map("qr_code_id")
+  qrCode     QRCode   @relation(fields: [qrCodeId], references: [id])
+
+  @@map("visit_logs")
+}
