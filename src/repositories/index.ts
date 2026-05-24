@@ -1,12 +1,25 @@
 import prisma from '../config/prisma';
 import { User, Location, QRCode, Review, VisitLog, Role, Category } from '@prisma/client';
 
+// Helper select user tanpa password
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  phone: true,
+  avatarUrl: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+};
+
 // ─── User Repository ──────────────────────────────────────────
 export const UserRepository = {
-  findAll: () => prisma.user.findMany({ omit: { password: true } }),
+  findAll: () => prisma.user.findMany({ select: userSelect }),
 
   findById: (id: number) =>
-    prisma.user.findUnique({ where: { id }, omit: { password: true } }),
+    prisma.user.findUnique({ where: { id }, select: userSelect }),
 
   findByEmail: (email: string) =>
     prisma.user.findUnique({ where: { email } }),
@@ -15,13 +28,13 @@ export const UserRepository = {
     prisma.user.create({ data }),
 
   update: (id: number, data: Partial<User>) =>
-    prisma.user.update({ where: { id }, data, omit: { password: true } }),
+    prisma.user.update({ where: { id }, data, select: userSelect }),
 
   updateRole: (id: number, role: Role) =>
-    prisma.user.update({ where: { id }, data: { role } }),
+    prisma.user.update({ where: { id }, data: { role }, select: userSelect }),
 
   toggleActive: (id: number, isActive: boolean) =>
-    prisma.user.update({ where: { id }, data: { isActive } }),
+    prisma.user.update({ where: { id }, data: { isActive }, select: userSelect }),
 
   delete: (id: number) => prisma.user.delete({ where: { id } }),
 };
@@ -36,7 +49,7 @@ export const LocationRepository = {
       },
       skip: params?.skip,
       take: params?.take,
-      include: { user: { omit: { password: true } } },
+      include: { user: { select: userSelect } },
       orderBy: { createdAt: 'desc' },
     }),
 
@@ -47,8 +60,8 @@ export const LocationRepository = {
     prisma.location.findUnique({
       where: { id },
       include: {
-        user: { omit: { password: true } },
-        reviews: { include: { user: { omit: { password: true } } } },
+        user: { select: userSelect },
+        reviews: { include: { user: { select: userSelect } } },
         qrCodes: true,
       },
     }),
@@ -102,7 +115,7 @@ export const ReviewRepository = {
   findByLocation: (locationId: number) =>
     prisma.review.findMany({
       where: { locationId },
-      include: { user: { omit: { password: true } } },
+      include: { user: { select: userSelect } },
       orderBy: { createdAt: 'desc' },
     }),
 
