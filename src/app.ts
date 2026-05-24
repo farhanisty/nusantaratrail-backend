@@ -21,10 +21,11 @@ app.use('/uploads', express.static(path.resolve(uploadPath)));
 // ─── Swagger UI ───────────────────────────────────────────────
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const swaggerOutput = require('../swagger-output.json');
+  const swaggerOutput = require('./swagger-output.json');
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput));
   console.log('📄 Swagger UI: http://localhost:3000/api-docs');
-} catch {
+} catch (err) {
+  console.log(err);
   console.log('⚠️  swagger-output.json belum ada. Jalankan: npm run swagger');
 }
 
