@@ -12,7 +12,7 @@ steps:
       [
         'build',
         '-t',
-        'asia-southeast2-docker.pkg.dev/nusantaratrail123/backend-repo/backend:latest',
+        'asia-southeast2-docker.pkg.dev/d-04-488904/backend-repo/backend:latest',
         '.'
       ]
 
@@ -20,11 +20,11 @@ steps:
     args:
       [
         'push',
-        'asia-southeast2-docker.pkg.dev/nusantaratrail123/backend-repo/backend:latest'
+        'asia-southeast2-docker.pkg.dev/d-04-488904/backend-repo/backend:latest'
       ]
 
 images:
-  - 'asia-southeast2-docker.pkg.dev/nusantaratrail123/backend-repo/backend:latest'
+  - 'asia-southeast2-docker.pkg.dev/d-04-488904/backend-repo/backend:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
