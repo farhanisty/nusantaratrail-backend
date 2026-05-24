@@ -1,32 +1,50 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - build
-      - '-t'
-      - 'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend:latest'
-      - '.'
-
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - push
-      - 'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend:latest'
-
+  # Configure Docker Auth
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
-      - run
-      - deploy
-      - nusantara-backend
-      - '--image'
-      - 'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend:latest'
-      - '--region'
-      - 'asia-southeast2'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
+      - auth
+      - configure-docker
+      - asia-southeast2-docker.pkg.dev
+      - --quiet
+
+  # Build Docker Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend',
+        '.'
+      ]
+
+  # Push Docker Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend'
+      ]
+
+  # Deploy Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run',
+        'deploy',
+        'nusantara-backend',
+        '--image',
+        'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend',
+        '--region',
+        'asia-southeast2',
+        '--platform',
+        'managed',
+        '--allow-unauthenticated'
+      ]
 
 images:
-  - 'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend:latest'
+  - 'asia-southeast2-docker.pkg.dev/nusantaratrail123/nusantara/backend'
 
 options:
   logging: CLOUD_LOGGING_ONLY
