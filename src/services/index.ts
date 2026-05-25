@@ -3,7 +3,7 @@ import slugify from '../utils/slugify';
 import { AppError } from '../utils/AppError';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { generateQRCode } from '../utils/qrGenerator';
-import { getFileUrl, saveFileLocally } from '../config/storage';
+import { uploadFile } from '../config/storage';
 import {
   UserRepository,
   LocationRepository,
@@ -85,8 +85,7 @@ export const LocationService = {
 
     let coverImage: string | undefined;
     if (imageFile) {
-      const filename = saveFileLocally(imageFile, 'images');
-      coverImage = getFileUrl('images', filename);
+      coverImage = await uploadFile(imageFile, 'images');
     }
 
     return LocationRepository.create({
@@ -98,14 +97,17 @@ export const LocationService = {
     });
   },
 
-  update: async (id: number, data: Partial<{ name: string; description: string; address: string; latitude: number; longitude: number; category: string }>, imageFile?: Express.Multer.File) => {
+  update: async (
+    id: number,
+    data: Partial<{ name: string; description: string; address: string; latitude: number; longitude: number; category: string }>,
+    imageFile?: Express.Multer.File
+  ) => {
     const location = await LocationRepository.findById(id);
     if (!location) throw new AppError('Lokasi tidak ditemukan', 404);
 
     let coverImage: string | undefined;
     if (imageFile) {
-      const filename = saveFileLocally(imageFile, 'images');
-      coverImage = getFileUrl('images', filename);
+      coverImage = await uploadFile(imageFile, 'images');
     }
 
     return LocationRepository.update(id, { ...data, ...(coverImage && { coverImage }) } as any);
@@ -124,8 +126,7 @@ export const QRCodeService = {
     const location = await LocationRepository.findById(locationId);
     if (!location) throw new AppError('Lokasi tidak ditemukan', 404);
 
-    const { code, filename } = await generateQRCode(locationId);
-    const qrImageUrl = getFileUrl('qrcodes', filename);
+    const { code, qrImageUrl } = await generateQRCode(locationId);
 
     return QRCodeRepository.create({ locationId, code, qrImageUrl, generatedBy });
   },
@@ -164,13 +165,15 @@ export const AudioService = {
     const location = await LocationRepository.findById(data.locationId);
     if (!location) throw new AppError('Lokasi tidak ditemukan', 404);
 
-    const filename = saveFileLocally(audioFile, 'audio');
-    const audioUrl = getFileUrl('audio', filename);
+    const audioUrl = await uploadFile(audioFile, 'audio');
 
     return AudioGuide.create({ ...data, audioUrl, uploadedBy });
   },
 
-  update: async (id: string, data: Partial<{ title: string; language: string; transcript: string; durationSeconds: number }>) => {
+  update: async (
+    id: string,
+    data: Partial<{ title: string; language: string; transcript: string; durationSeconds: number }>
+  ) => {
     const audio = await AudioGuide.findByIdAndUpdate(id, data, { new: true });
     if (!audio) throw new AppError('Audio guide tidak ditemukan', 404);
     return audio;
@@ -189,7 +192,13 @@ export const ContentService = {
     return HistoricalContent.find({ locationId, ...(language && { language }) });
   },
 
-  create: async (data: { locationId: number; language: 'id' | 'en'; title: string; sections: any[]; tags?: string[] }) => {
+  create: async (data: {
+    locationId: number;
+    language: 'id' | 'en';
+    title: string;
+    sections: any[];
+    tags?: string[];
+  }) => {
     const location = await LocationRepository.findById(data.locationId);
     if (!location) throw new AppError('Lokasi tidak ditemukan', 404);
     return HistoricalContent.create(data);
@@ -224,7 +233,12 @@ export const ReviewService = {
     return ReviewRepository.create(data);
   },
 
-  update: async (id: number, userId: number, data: { rating?: number; comment?: string }, isAdmin: boolean) => {
+  update: async (
+    id: number,
+    userId: number,
+    data: { rating?: number; comment?: string },
+    isAdmin: boolean
+  ) => {
     const review = await ReviewRepository.findById(id);
     if (!review) throw new AppError('Review tidak ditemukan', 404);
     if (!isAdmin && review.userId !== userId) throw new AppError('Akses ditolak', 403);
@@ -241,7 +255,13 @@ export const ReviewService = {
 
 // ─── Visit Service ────────────────────────────────────────────
 export const VisitService = {
-  log: async (data: { locationId: number; qrCodeId: number; userId?: number; deviceInfo?: string; ipAddress?: string }) => {
+  log: async (data: {
+    locationId: number;
+    qrCodeId: number;
+    userId?: number;
+    deviceInfo?: string;
+    ipAddress?: string;
+  }) => {
     return VisitLogRepository.create(data);
   },
 
